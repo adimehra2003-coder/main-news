@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Aggregated News — Demo</title>
+  <style>
+    :root{
+      --bg:#0f1724; --card:#0b1220; --accent:#06b6d4; --muted:#94a3b8; --glass: rgba(255,255,255,0.03);
+      --radius:12px; --max-width:1100px;
+    }
+    *{box-sizing:border-box}
+    body{font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:0; background:linear-gradient(180deg,#071021 0%, #071827 100%); color:#e6eef6; display:flex; align-items:flex-start; justify-content:center; padding:28px;}
+    .container{width:100%; max-width:var(--max-width);} 
+
+    header{display:flex; gap:16px; align-items:center; justify-content:space-between; margin-bottom:18px}
+    .brand{display:flex; gap:12px; align-items:center}
+    .logo{width:44px; height:44px; border-radius:10px; background:linear-gradient(135deg,var(--accent),#7c3aed); display:flex; align-items:center; justify-content:center; font-weight:700}
+    .brand h1{font-size:18px;margin:0}
+    .controls{display:flex; gap:12px; align-items:center}
+    .search{background:var(--glass); border:1px solid rgba(255,255,255,0.04); padding:8px 10px; border-radius:10px; min-width:220px; color:inherit}
+    .category-bar{display:flex; gap:8px; flex-wrap:wrap; margin:12px 0}
+    .category{padding:8px 12px; border-radius:999px; background:transparent; border:1px solid rgba(255,255,255,0.03); cursor:pointer}
+    .category.active{background:var(--accent); color:#042027; border:0}
+
+    main{display:grid; grid-template-columns: 1fr 320px; gap:18px}
+    .feed{background:transparent;}
+    .grid{display:grid; grid-template-columns: repeat(auto-fill,minmax(260px,1fr)); gap:14px}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:12px; overflow:hidden; box-shadow:0 6px 18px rgba(2,6,23,0.6); border:1px solid rgba(255,255,255,0.03); display:flex; flex-direction:column}
+    .card img{width:100%; height:160px; object-fit:cover}
+    .card .body{padding:12px; display:flex; flex-direction:column; gap:8px; flex:1}
+    .card h3{margin:0;font-size:15px}
+    .meta{font-size:12px;color:var(--muted)}
+    .read{margin-top:auto; display:flex; justify-content:space-between; align-items:center}
+    .btn{background:transparent; border:1px solid rgba(255,255,255,0.06); padding:6px 10px; border-radius:8px; cursor:pointer}
+
+    aside{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); padding:12px; border-radius:12px; height:fit-content; border:1px solid rgba(255,255,255,0.03)}
+    .trending h4{margin:0 0 8px 0}
+    .trending li{list-style:none; padding:8px 6px; border-radius:8px; margin-bottom:6px; background:rgba(255,255,255,0.01)}
+
+    footer{margin-top:16px; text-align:center; color:var(--muted); font-size:13px}
+
+    /* responsive */
+    @media (max-width:900px){ main{grid-template-columns:1fr} aside{order:2} }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo">N</div>
+        <div>
+          <h1>NewsHub — Aggregator</h1>
+          <div style="font-size:12px;color:var(--muted)">Top headlines from multiple sources (demo)</div>
+        </div>
+      </div>
+      <div class="controls">
+        <input class="search" id="search" placeholder="Search headlines, e.g. climate" />
+        <button class="btn" id="refresh">Refresh</button>
+      </div>
+    </header>
+
+    <div class="category-bar" id="categories">
+      <button class="category active" data-cat="general">All</button>
+      <button class="category" data-cat="business">Business</button>
+      <button class="category" data-cat="technology">Technology</button>
+      <button class="category" data-cat="entertainment">Entertainment</button>
+      <button class="category" data-cat="sports">Sports</button>
+      <button class="category" data-cat="science">Science</button>
+      <button class="category" data-cat="health">Health</button>
+    </div>
+
+    <main>
+      <section class="feed">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px">
+          <h2 style="margin:0">Top Stories</h2>
+          <div id="status" style="font-size:13px;color:var(--muted)">—</div>
+        </div>
+        <div class="grid" id="articles"></div>
+      </section>
+
+      <aside>
+        <div class="trending">
+          <h4>Trending</h4>
+          <ul id="trending-list">
+            <!-- Filled by JS -->
+          </ul>
+        </div>
+
+        <div style="margin-top:12px; font-size:13px; color:var(--muted)">
+          Demo uses NewsAPI.org by default. Replace API key below and run locally. If API fails, demo data will be shown.
+        </div>
+      </aside>
+    </main>
+
+    <footer>
+      Built with HTML + CSS (Flexbox/Grid) + Vanilla JS • Replace <code>YOUR_NEWSAPI_KEY</code> in the script to fetch live data
+    </footer>
+  </div>
+
+  <script>
+    // ---------------- CONFIG
+    const CONFIG = {
+      // get a free key at https://newsapi.org/ and paste it here or use your server-side proxy
+      NEWSAPI_KEY: 'YOUR_NEWSAPI_KEY',
+      // country or sources — tweak as you like
+      country: 'us',
+      pageSize: 24
+    }
+
+    // ---------------- Demo fallback data (used when API fails or key missing)
+    const dummyArticles = [
+      {title:'Global leaders meet to discuss climate action', description:'A short summary of the meeting and commitments.', url:'#', urlToImage:'https://images.unsplash.com/photo-1506277882587-9b6d8a4b07c2?auto=format&fit=crop&w=1200&q=60', source:{name:'Demo Times'}, publishedAt:'2025-10-01T09:00:00Z'},
+      {title:'New advances in battery tech promise longer EV ranges', description:'Researchers announced a new cell chemistry...', url:'#', urlToImage:'https://images.unsplash.com/photo-1549921296-3d3f9f0b9d32?auto=format&fit=crop&w=1200&q=60', source:{name:'Science Daily'}, publishedAt:'2025-09-30T12:30:00Z'},
+      {title:'Local startup raises \$5M to expand in Asia', description:'Funding round led by regional investors.', url:'#', urlToImage:'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=60', source:{name:'Business Wire'}, publishedAt:'2025-09-29T08:15:00Z'}
+    ];
+
+    // ---------------- Helpers
+    function timeAgo(iso){
+      const then = new Date(iso);
+      const diff = Math.floor((Date.now()-then)/1000);
+      if (diff < 60) return diff + 's ago';
+      if (diff < 3600) return Math.floor(diff/60)+'m ago';
+      if (diff < 86400) return Math.floor(diff/3600)+'h ago';
+      return Math.floor(diff/86400)+'d ago';
+    }
+
+    function el(tag, cls){ const e = document.createElement(tag); if (cls) e.className = cls; return e }
+
+    // ---------------- Renderers
+    function renderArticles(articles){
+      const wrap = document.getElementById('articles'); wrap.innerHTML='';
+      if(!articles || articles.length===0){ wrap.innerHTML = '<div style="padding:20px;color:var(--muted)">No articles found.</div>'; return }
+      articles.forEach(a=>{
+        const card = el('article','card')
+        const img = document.createElement('img'); img.src = a.urlToImage || 'https://via.placeholder.com/600x400?text=No+Image'; img.alt = a.title || ''
+        const body = el('div','body')
+        const h3 = el('h3'); h3.textContent = a.title || 'Untitled'
+        const meta = el('div','meta'); meta.textContent = `${a.source?.name || 'Unknown'} • ${timeAgo(a.publishedAt||new Date())}`
+        const p = el('p'); p.style.margin='0'; p.style.fontSize='13px'; p.style.color='var(--muted)'; p.textContent = a.description || ''
+        const read = el('div','read')
+        const open = el('button','btn'); open.textContent='Open'; open.onclick = ()=> window.open(a.url || '#','_blank')
+        read.append(open)
+        body.append(h3, meta, p, read)
+        card.append(img, body)
+        wrap.append(card)
+      })
+    }
+
+    function renderTrending(articles){
+      const ul = document.getElementById('trending-list'); ul.innerHTML='';
+      (articles.slice(0,6)).forEach(a=>{
+        const li = document.createElement('li');
+        const ael = document.createElement('a'); ael.href = a.url || '#'; ael.textContent = a.title; ael.target='_blank'; ael.style.color='inherit'; ael.style.textDecoration='none';
+        li.append(ael);
+        ul.append(li);
+      })
+    }
+
+    // ---------------- Fetching
+    async function fetchTopHeadlines({category=null, q=null} = {}){
+      const status = document.getElementById('status');
+      status.textContent = 'Loading...'
+
+      // If no API key was provided, skip network call and use dummy
+      if (!CONFIG.NEWSAPI_KEY || CONFIG.NEWSAPI_KEY === 'YOUR_NEWSAPI_KEY'){
+        console.warn('No NewsAPI key provided — using dummy articles.');
+        status.textContent = 'Demo mode — using sample articles';
+        return {articles: dummyArticles}
+      }
+
+      const params = new URLSearchParams();
+      params.set('pageSize', CONFIG.pageSize);
+      if (CONFIG.country) params.set('country', CONFIG.country);
+      if (category && category !== 'general') params.set('category', category);
+      if (q) params.set('q', q);
+      params.set('apiKey', CONFIG.NEWSAPI_KEY);
+
+      const url = `https://newsapi.org/v2/top-headlines?${params.toString()}`;
+
+      try{
+        const res = await fetch(url);
+        const data = await res.json();
+        if (!data || !data.articles) {
+          console.warn('API returned no articles or invalid structure — using dummy news.');
+          status.textContent = 'API returned invalid response — using demo articles';
+          return {articles: dummyArticles}
+        }
+        status.textContent = `Showing ${data.articles.length} articles`;
+        return data;
+      }catch(err){
+        console.error('Fetch failed',err);
+        status.textContent = 'Network error — using demo articles';
+        return {articles: dummyArticles}
+      }
+    }
+
+    // ---------------- UI glue
+    let _lastArticles = dummyArticles;
+    async function load({category=null, q=null} = {}){
+      const res = await fetchTopHeadlines({category, q});
+      _lastArticles = res.articles || [];
+      renderArticles(_lastArticles);
+      renderTrending(_lastArticles);
+    }
+
+    // wire events
+    document.getElementById('refresh').addEventListener('click', ()=>{
+      const active = document.querySelector('.category.active');
+      load({category: active?.dataset?.cat || null, q: document.getElementById('search').value || null});
+    })
+
+    document.getElementById('search').addEventListener('keydown', (e)=>{
+      if (e.key === 'Enter') load({q: e.target.value});
+    })
+
+    document.querySelectorAll('.category').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        document.querySelectorAll('.category').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        load({category: btn.dataset.cat});
+      })
+    })
+
+    // initial load
+    load();
+
+  </script>
+</body>
+</html>
