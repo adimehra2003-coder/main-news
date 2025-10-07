@@ -1,59 +1,57 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>News Website</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div class="container">
-    <header>
-      <div class="brand">
-        <div class="logo">N</div>
-        <div>
-          <h1>NewsHub — Aggregator</h1>
-          <p class="subtitle">Top headlines from multiple sources</p>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>News Website</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div class="brand">
+          <div class="logo">N</div>
+          <div>
+            <h1>NewsHub — Aggregator</h1>
+            <p class="subtitle">Top headlines from multiple sources</p>
+          </div>
         </div>
-      </div>
-      <div class="controls">
-        <input class="search" id="search" placeholder="Search news..." />
-        <button class="btn" id="refresh">Refresh</button>
-      </div>
-    </header>
+        <div class="controls">
+          <input class="search" id="search" placeholder="Search news..." />
+          <button class="btn" id="refresh">Refresh</button>
+        </div>
+      </header>
 
-    <div class="category-bar" id="categories">
-      <button class="category active" data-cat="general">All</button>
-      <button class="category" data-cat="business">Business</button>
-      <button class="category" data-cat="technology">Technology</button>
-      <button class="category" data-cat="entertainment">Entertainment</button>
-      <button class="category" data-cat="sports">Sports</button>
-      <button class="category" data-cat="science">Science</button>
-      <button class="category" data-cat="health">Health</button>
+      <div class="category-bar" id="categories">
+        <button class="category active" data-cat="general">All</button>
+        <button class="category" data-cat="business">Business</button>
+        <button class="category" data-cat="technology">Technology</button>
+        <button class="category" data-cat="entertainment">Entertainment</button>
+        <button class="category" data-cat="sports">Sports</button>
+        <button class="category" data-cat="science">Science</button>
+        <button class="category" data-cat="health">Health</button>
+      </div>
+
+      <main>
+        <section class="feed">
+          <div class="feed-header">
+            <h2>Top Stories</h2>
+            <div id="status">—</div>
+          </div>
+          <div class="grid" id="articles"></div>
+        </section>
+
+        <aside>
+          <div class="trending">
+            <h4>Trending</h4>
+            <ul id="trending-list"></ul>
+          </div>
+        </aside>
+      </main>
+
+      <footer>Built with HTML + CSS + JavaScript</footer>
     </div>
 
-    <main>
-      <section class="feed">
-        <div class="feed-header">
-          <h2>Top Stories</h2>
-          <div id="status">—</div>
-        </div>
-        <div class="grid" id="articles"></div>
-      </section>
-
-      <aside>
-        <div class="trending">
-          <h4>Trending</h4>
-          <ul id="trending-list"></ul>
-        </div>
-      </aside>
-    </main>
-
-    <footer>
-      Built with HTML + CSS + JavaScript • Replace <code>YOUR_NEWSAPI_KEY</code> in <b>script.js</b> for live data
-    </footer>
-  </div>
-
-  <script src="script.js"></script>
-</body>
+    <script src="script.js"></script>
+  </body>
 </html>
